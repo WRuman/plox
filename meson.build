@@ -6,7 +6,5 @@ project('plox', 'cpp',
 
 # All build files throughout the project should append to this list
 project_sources = []
-
-
-subdir('src') # Defines variable 'main_source'
-executable('plox', main_source)
+subdir('src') 
+executable('plox', project_sources)

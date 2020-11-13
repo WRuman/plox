@@ -6,16 +6,23 @@
 #include <string.h>
 
 
-void report(const std::string& msg) {
-    std::cerr << msg << std::endl;
+#include "Scanner.h"
+
+bool hadError = false;
+
+void report(int line, const std::string& where, const std::string& msg) {
+    constexpr auto prefix = "[line " ;
+    constexpr auto mid = "] Error" ;
+    std::cerr << prefix << line << mid << where << ": " << msg << std::endl;
     exit(EXIT_FAILURE);
 }
 
 
 void run(std::istream& source) {
-    std::string firstLine;
-    std::getline(source, firstLine);
-    std::cout << firstLine << std::endl;
+    auto scanner = pl::Scanner(source);
+    for (auto token : scanner.scanTokens()) {
+        std::cout << token << std::endl;
+    }
 }
 
 
@@ -24,8 +31,9 @@ void runfile(char *scriptName) {
     std::ifstream ifs(scriptName);
     if (ifs.is_open()) {
         run(ifs);
-    } else {
-        report("Could not open script file " + std::string(scriptName));
+    }
+    if (hadError) {
+        exit(EX_DATAERR);
     }
 }
 
@@ -42,6 +50,7 @@ void runPrompt() {
         }
         std::istringstream iss(in);
         run(iss);
+        hadError = false;
     }
 }
 
