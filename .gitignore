@@ -32,4 +32,4 @@
 *.app
 
 # Ephemeral directories
-build/
+builddir/
