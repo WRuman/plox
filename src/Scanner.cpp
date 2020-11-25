@@ -31,6 +31,17 @@ bool Scanner::match(char expected) {
     return true;
 }
 
+bool Scanner::isDigit(char c) {
+    return c >= '0' && c <= '9';
+}
+
+char Scanner::peekNext() {
+    char firstOut = source.get();
+    char peeked = source.peek();
+    source.putback(firstOut);
+    return peeked;
+}
+
 void Scanner::addToken(TokenType t) {
     addToken(t, nullptr);
 }
@@ -40,9 +51,49 @@ void Scanner::addToken(TokenType t, std::string literal) {
 }
 
 void Scanner::killLine() {
+    // Continue until newline or EOF is found, but do not consume the newline
     while (!source.eof() && source.peek() != '\n') {
         advance();
     }
+}
+
+void Scanner::string() {
+    // Continue until the other quote or EOF is found, but do not consume the quote
+    while (!source.eof() && source.peek() != '"') {
+        if (source.peek() == '\n') {
+            line++;
+        }
+        advance();
+    }
+    if (source.eof()) {
+        std::cerr << line << "Unterminated string" << std::endl;
+        return;
+    }
+
+    // Capture the terminating quote
+    advance();
+
+    // Omit the quotes
+    std::string literal = lexeme.substr(1, lexeme.length() - 2);
+    addToken(TokenType::STRING, literal);
+}
+
+void Scanner::number() {
+    while (isDigit(source.peek())) {
+        advance();
+    }
+
+    // There may be a fractional part to look for
+    if (source.peek() == '.' && isDigit(peekNext())) {
+        // Consumes .
+        advance();
+        while (isDigit(source.peek())) {
+            advance();
+        }
+    }
+
+    //TODO Add handling for multiple types of literals
+    //addToken(TokenType::NUMBER, )
 }
 
 void Scanner::scanToken() {
@@ -79,8 +130,13 @@ void Scanner::scanToken() {
         case '\n':
             line++;
             break;
+        case '"': string(); break;
         default:
-            std::cerr << line << "Unexpected character '" << c <<  "'" << std::endl;
+            if (isDigit(c)) {
+                number();
+            } else {
+                std::cerr << line << "Unexpected character '" << c <<  "'" << std::endl;
+            }
             break;
     }
 }
