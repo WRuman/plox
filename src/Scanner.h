@@ -19,6 +19,8 @@ private:
     char advance();
     void addToken(TokenType t);
     void addToken(TokenType t, std::string literal);
+    bool match(char expected);
+    void killLine();
     void scanToken();
 public:
     Scanner(std::istream& source): source(source) {};
