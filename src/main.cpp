@@ -3,7 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <sysexits.h>
-#include <string.h>
+#include <string>
 
 
 #include "Scanner.h"

@@ -1,14 +1,16 @@
 #include "Scanner.h"
 #include <iostream>
+#include <string>
 
 namespace pl {
 std::vector<Token> Scanner::scanTokens() {
-    while (!source.eof()) {
+    while (!atEnd()) {
         start = current;
         lexeme = "";
         scanToken();
     }
-    tokens.push_back(Token(TokenType::EOF, "", nullptr, line));
+    lexeme = "";
+    addToken(TokenType::EOF);
     return tokens;
 }
 
@@ -17,6 +19,10 @@ char Scanner::advance() {
     char c = source.get();
     lexeme.push_back(c);
     return c;
+}
+
+bool Scanner::atEnd() {
+    return source.peek() == std::char_traits<char>::eof();
 }
 
 bool Scanner::match(char expected) {
@@ -35,6 +41,16 @@ bool Scanner::isDigit(char c) {
     return c >= '0' && c <= '9';
 }
 
+bool Scanner::isAlpha(char c) {
+    return (c >= 'a' && c <= 'z')
+        || (c >= 'A' && c <= 'Z')
+        || c == '_';
+}
+
+bool Scanner::isAlphaNumeric(char c) {
+    return isAlpha(c) || isDigit(c);
+}
+
 char Scanner::peekNext() {
     char firstOut = source.get();
     char peeked = source.peek();
@@ -43,7 +59,7 @@ char Scanner::peekNext() {
 }
 
 void Scanner::addToken(TokenType t) {
-    addToken(t, nullptr);
+    addToken(t, "");
 }
 
 void Scanner::addToken(TokenType t, std::string literal) {
@@ -52,20 +68,20 @@ void Scanner::addToken(TokenType t, std::string literal) {
 
 void Scanner::killLine() {
     // Continue until newline or EOF is found, but do not consume the newline
-    while (!source.eof() && source.peek() != '\n') {
+    while (!atEnd() && source.peek() != '\n') {
         advance();
     }
 }
 
 void Scanner::string() {
     // Continue until the other quote or EOF is found, but do not consume the quote
-    while (!source.eof() && source.peek() != '"') {
+    while (!atEnd() && source.peek() != '"') {
         if (source.peek() == '\n') {
             line++;
         }
         advance();
     }
-    if (source.eof()) {
+    if (atEnd()) {
         std::cerr << line << "Unterminated string" << std::endl;
         return;
     }
@@ -76,6 +92,19 @@ void Scanner::string() {
     // Omit the quotes
     std::string literal = lexeme.substr(1, lexeme.length() - 2);
     addToken(TokenType::STRING, literal);
+}
+
+void Scanner::identifier() {
+    while (isAlphaNumeric(source.peek())) {
+        advance();
+    }
+    TokenType t;
+    if (identifierByName.count(lexeme) > 0) {
+        t = identifierByName[lexeme];
+    } else {
+        t = TokenType::IDENTIFIER;
+    }
+    addToken(t);
 }
 
 void Scanner::number() {
@@ -92,8 +121,7 @@ void Scanner::number() {
         }
     }
 
-    //TODO Add handling for multiple types of literals
-    //addToken(TokenType::NUMBER, )
+    addToken(TokenType::NUMBER, lexeme);
 }
 
 void Scanner::scanToken() {
@@ -134,8 +162,10 @@ void Scanner::scanToken() {
         default:
             if (isDigit(c)) {
                 number();
+            } else if (isAlpha(c)) {
+                identifier();
             } else {
-                std::cerr << line << "Unexpected character '" << c <<  "'" << std::endl;
+                std::cerr << "line: " << line << ": Unexpected character '" << c <<  "'" << std::endl;
             }
             break;
     }
