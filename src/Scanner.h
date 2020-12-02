@@ -31,6 +31,7 @@ private:
     int start = 0;
     int current = 0;
     int line = 1;
+    int blockComment = 0;
     std::vector<Token> tokens{};
     std::string lexeme{""};
     std::istream& source;

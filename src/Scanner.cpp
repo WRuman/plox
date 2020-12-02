@@ -26,14 +26,14 @@ bool Scanner::atEnd() {
 }
 
 bool Scanner::match(char expected) {
-    if (source.eof()) {
+    if (atEnd()) {
         return false;
     }
     char next = static_cast<char>(source.peek());
     if (next != expected) {
         return false;
     }
-    current++;
+    advance();
     return true;
 }
 
@@ -126,6 +126,12 @@ void Scanner::number() {
 
 void Scanner::scanToken() {
     char c = advance();
+    if (blockComment > 0) {
+        if (c == '*' && match('/')) {
+            blockComment--;
+        }
+        return;
+    }
     switch (c)
     {
         case '(': addToken(TokenType::LEFT_PAREN); break;
@@ -146,6 +152,8 @@ void Scanner::scanToken() {
             // Double slash indicates a comment, so discard the rest of the line.
             if (match('/')) {
                 killLine();
+            } else if (match('*')) {
+                blockComment++;
             } else {
                 addToken(TokenType::SLASH);
             }

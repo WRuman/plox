@@ -11,3 +11,6 @@ This is meant to be a C++ implementation of `jlox` from Part I of the book.
 After following the build instructions above, simply run `./builddir/plox`. If you do not 
 provide any arguments then `plox` enters REPL mode. If you provide the name of a script
 file then it will be loaded and run.
+
+## Test Files
+The directory named `test-inputs` is for input files that test various aspects of the interpreter. 
