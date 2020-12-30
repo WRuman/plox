@@ -8,7 +8,7 @@ project_sources += files([
 
 ast_gen_exe = executable('astgen', 'astgen.cpp')
 ast_gen_src = custom_target('gen-ast-classes',
-						output: ['ast.h'],
+						output: ['Expr.h'],
 						command: [ast_gen_exe])
 
 project_sources += ast_gen_src[0]

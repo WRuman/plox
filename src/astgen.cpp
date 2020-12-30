@@ -10,18 +10,15 @@
  */
 void defineType(std::fstream& fs, const std::string baseClass, const std::string data) {
     size_t leftBound = 0;
-    size_t offset = data.find('|');
-    const auto typeName = data.substr(leftBound, offset);
-    std::cerr << "Type Name: " << typeName << std::endl;
+    size_t rightBound = data.find('|');
+    const auto typeName = data.substr(leftBound, rightBound);
     auto fields = std::vector<std::string>();
     fs << "class " << typeName << " : public " << baseClass << "{\nprivate:" << std::endl;
     for (;;) {
-        leftBound = offset;
-        offset = data.find(',', leftBound);
-        std::cerr << "bound + offset [" << leftBound << " + " << offset << "]\n\t" 
-            << data.substr(leftBound, offset - leftBound) << std::endl;
-        if (offset != std::string::npos) {
-            fields.push_back(data.substr(leftBound, offset - leftBound));
+        leftBound = rightBound + 1;
+        rightBound = data.find(',', leftBound);
+        if (rightBound != std::string::npos) {
+            fields.push_back(data.substr(leftBound, rightBound - leftBound));
         } else {
             // Last one
             fields.push_back(data.substr(leftBound, std::string::npos));
@@ -46,6 +43,7 @@ void defineType(std::fstream& fs, const std::string baseClass, const std::string
         }
     }
     fs << "): " << initList << " {};" << std::endl << "};" << std::endl;
+    std::cerr << "Generated type '" << typeName << "' with " << fields.size() << " fields" << std::endl;
 }
 
 void defineAst(const std::string destDir, const std::string baseName, const std::vector<std::string> types) {
@@ -55,7 +53,9 @@ void defineAst(const std::string destDir, const std::string baseName, const std:
         std::cerr << "Could not open '" << target << "' for writing" << std::endl;
         throw EXIT_FAILURE;
     }
-    fs << "#ifndef " << baseName <<  "_H\n#define " << baseName  << "_H\n"
+    fs  << "// THIS CODE IS AUTOMATICALLY GENERATED. MANUAL EDITS WILL BE OVERWRITTEN!" 
+        << std::endl << "#ifndef " << baseName <<  "_H\n#define " << baseName  << "_H\n"
+        << "#include <string>\n#include <Token.h>"
         << "\n\n" << "namespace pl {\n"
         << "class " << baseName << "{\n" 
         << "public:\n\t" << baseName << "() {}\n\tvirtual ~" << baseName << "()=0;\n"
@@ -69,10 +69,10 @@ void defineAst(const std::string destDir, const std::string baseName, const std:
 
 int main() {
     defineAst(".", "Expr", std::vector<std::string>{
-        "Binary | pl::Expr& left, pl::Token& operator, pl::Expr& right",
+        "Binary | pl::Expr& left, pl::Token& op, pl::Expr& right",
         "Grouping | pl::Expr& expression",
         "Literal | std::string value",
-        "Unary | pl::Token& operator, pl::Expr& right"
+        "Unary | pl::Token& op, pl::Expr& right"
     });
     return 0;
 }
