@@ -33,3 +33,6 @@
 
 # Ephemeral directories
 builddir/
+
+# IDE creations
+.vscode
